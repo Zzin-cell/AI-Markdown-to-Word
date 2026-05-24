@@ -129,11 +129,55 @@ A: 能。`for f in *.md; do ./convert.sh "$f"; done`
 
 ```
 md2word/
-├── README.md     # 说明文档
-└── convert.sh    # 核心脚本 (~280行)
+├── README.md      # 说明文档
+├── convert.sh     # 核心脚本 (~280行)
+└── hook-stop.sh   # Claude Code 自动转换钩子 (可选)
 ```
 
 > Pandoc 不在仓库中（~200MB）。脚本自动查找系统已安装的 pandoc。
+
+## Claude Code 自动转换（可选）
+
+如果你在用 [Claude Code](https://claude.ai/code)，可以配置 Stop Hook，让 Claude 每次回复**自动存为 Word**，省去手动复制和运行命令。
+
+### 配置
+
+在 `~/.claude/settings.json` 中添加：
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /path/to/hook-stop.sh",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 工作原理
+
+```
+你的提问 → Claude 回复 → Stop hook 触发
+                              ↓
+                     读取对话 transcript
+                              ↓
+                     提取最后一条回复
+                              ↓
+                   Pandoc 转 .docx（OMML 公式 + 表格）
+                              ↓
+                  保存到 ~/Desktop/AI_Word_Exports/
+```
+
+> 需要系统安装 Python 3。Pandoc 自动从同目录查找（`pandoc.exe` 或系统 PATH）。
 
 ## 许可证
 
