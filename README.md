@@ -1,227 +1,140 @@
 # md2word
 
-> Markdown → Word 一键转换 · 公式可编辑 · 图片自动嵌入 · 表格不丢 · 代码不乱
+> 不同 AI 模型生成的 Markdown → 一键复制转 Word · 公式可编辑 · 图片嵌入 · 表格不丢
 
-## 痛点
+## 为什么需要这个工具？
 
-把 Markdown 转成 Word 时，最常见的五个翻车现场：
+你在 DeepSeek、ChatGPT、Claude 里精心调教出的答案，满屏 LaTeX 公式、Python 代码、Mermaid 流程图——想存成 Word 文档时傻眼了：
 
-| 问题 | 原因 |
-|------|------|
-| **数学公式变乱码** | Word 只认 OMML 格式，不认识 `$...$` / `$$...$$` |
-| **图片丢失或变模糊** | 截图方式粘贴，分辨率低；本地路径图片被忽略 |
-| **表格变纯文本** | 对齐丢失，边框消失，合并单元格全乱 |
-| **代码块失去高亮** | docx 几乎没有工具做代码着色 |
-| **流程图直接消失** | Mermaid 语法在 Word 里不会被渲染 |
+- 粘贴到 Word → 公式变成 `$$...$$` 乱码
+- 图片只剩裂开的链接
+- 表格对齐全丢
+- 代码块颜色全无
+- DeepSeek 的"已深度思考"折叠块变成占位文本
 
-`md2word` 用一个命令全部解决。
+**md2word 三步解决**：复制 → 终端敲一条命令 → Word 自动打开，干净整洁。
 
-## 支持的内容类型全览
+## 快速开始
 
-| 内容 | Markdown 写法 | 输出效果 |
-|------|--------------|----------|
-| 行内公式 | `$E=mc^2$` | ✅ Word OMML 可编辑公式 |
-| 块级公式 | `$$\sum_{i=1}^n$$` | ✅ Word OMML 可编辑公式 |
-| 本地图片 | `![](img/arch.png)` | ✅ 自动查找并嵌入 docx |
-| 网络图片 | `![](https://.../img.png)` | ✅ 自动下载嵌入 |
-| 管道表格 | `\| a \| b \|` | ✅ 边框 + 对齐完整保留 |
-| 网格表格 | `+---+---+` | ✅ 支持合并单元格 |
-| 代码块 | ` ```python ... ``` ` | ✅ 等宽字体 + 缩进（HTML 带高亮） |
-| Mermaid 图 | ` ```mermaid ... ``` ` | ✅ 需 `--mermaid`，渲染为图片嵌入 |
-| 自动目录 | 基于 `#` 标题层级 | ✅ `--toc` 自动生成 |
-
-## 原理
-
-底层使用 [Pandoc](https://pandoc.org/)，关键参数：
+### 安装
 
 ```bash
-pandoc input.md -o output.docx --mathml --resource-path="$(dirname input.md)"
-```
+# 1. 必须：Pandoc
+winget install JohnMacFarlane.Pandoc   # Windows
+brew install pandoc                     # macOS
+sudo apt install pandoc                 # Linux
 
-### 图片是怎么保留的
+# 2. 可选：Mermaid 流程图
+npm install -g @mermaid-js/mermaid-cli mermaid-filter
 
-```
-![架构图](img/architecture.png)
-   │                │
-   │   --resource-path 指定搜索根目录
-   │   Pandoc 自动找到图片，读入字节流
-   │   直接写进 docx 的 /word/media/ 目录
-   │
-   └──→ Word 打开后图片就在文档里，不是链接
-```
-
-- **本地图片**：`--resource-path` 告诉 Pandoc 去哪里找相对路径的图片
-- **网络图片**：Pandoc 自动下载，缓存后嵌入（需要网络连接）
-- **SVG**：Pandoc 3.x 原生支持，直接嵌为矢量图
-- **图片格式**：PNG / JPG / SVG / GIF 全覆盖
-
-### 表格是怎么保留的
-
-Pandoc 原生解析 Markdown 表格语法，直接输出 Word 的 `<w:tbl>` XML 节点：
-
-| Markdown | Word 内部 |
-|----------|-----------|
-| `\|` 分隔符 | 单元格边界 |
-| `:---` 左对齐 | `<w:jc w:val="left">` |
-| `:---:` 居中 | `<w:jc w:val="center">` |
-| `---:` 右对齐 | `<w:jc w:val="right">` |
-
-支持四种表格语法：管道表、网格表、简单表、多行表。
-
-## 安装
-
-### 前提：安装 Pandoc
-
-```bash
-# Windows
-winget install JohnMacFarlane.Pandoc
-
-# macOS
-brew install pandoc
-
-# Linux
-sudo apt install pandoc
-```
-
-### 可选：Mermaid 流程图支持
-
-```bash
-npm install -g @mermaid-js/mermaid-cli
-npm install -g mermaid-filter
-```
-
-### 获取本脚本
-
-```bash
+# 3. 克隆
 git clone https://github.com/Zzin-cell/md2word.git
 cd md2word
 chmod +x convert.sh
 ```
 
-## 使用
+### 剪贴板模式（从 AI 对话框复制后一键出 Word）
 
 ```bash
-# 基础转换（公式 + 图片 + 表格）
-./convert.sh document.md
+# 在 AI 对话框 Ctrl+C 复制 → 终端执行：
+./convert.sh -c
 
-# 指定输出路径
-./convert.sh document.md report.docx
-
-# 自动生成目录
-./convert.sh document.md --toc
-
-# 代码语法高亮（HTML 中转）
-./convert.sh document.md --html
-
-# Mermaid 流程图渲染
-./convert.sh document.md --mermaid
-
-# 自定义 Word 样式模板
-./convert.sh document.md --ref template.docx
-
-# 全套：目录 + 流程图
-./convert.sh document.md --toc --mermaid
+# 自动做的事：
+# 1. 读取剪贴板
+# 2. 检测是哪个模型的输出
+# 3. 清洗掉 "已深度思考" 等 AI 专属标记
+# 4. 公式→OMML 图片→嵌入 表格→保留
+# 5. 生成 docx 并自动打开
 ```
 
-### 转换完成后的输出示例
+### 文件模式
 
+```bash
+./convert.sh document.md              # 基础转换
+./convert.sh document.md --toc        # 含目录
+./convert.sh document.md --html       # 代码高亮版（HTML→粘贴到 Word）
+./convert.sh document.md --mermaid    # 渲染流程图
 ```
+
+## 多模型支持
+
+| AI 模型 | `--from` 参数 | 自动清洗内容 |
+|---------|--------------|-------------|
+| **DeepSeek** | `--from deepseek` | 🤖 标题 + "已深度思考" 折叠块 + 分隔线 |
+| **ChatGPT** | `--from chatgpt` | ChatGPT 标签行 |
+| **Claude** | `--from claude` | Claude 标签 + 思考块 + XML 残留 |
+| **Kimi** | `--from kimi` | Kimi 思考引用块 |
+| **自动检测** | 默认 | 根据内容特征自动判断 |
+
+```bash
+# 剪贴板 + 指定模型 + 多选项
+./convert.sh -c --from deepseek --toc
+./convert.sh -c --from claude --html
+```
+
+## 支持的内容
+
+| Markdown 写法 | 输出效果 |
+|-------------|----------|
+| `$E=mc^2$` / `$$\sum_{i=1}^n$$` / `\(\hat{\beta}\)` | ✅ Word OMML 可双击编辑的公式 |
+| `![图片](img/photo.png)` 本地路径 | ✅ 自动查找并嵌入 docx |
+| `![图片](https://example.com/img.png)` 网络 URL | ✅ 自动下载嵌入 |
+| `| a | b |` 管道表 / `+--+--+` 网格表 | ✅ 边框 + 对齐 + 合并单元格 |
+| ` ```python ``` ` 代码块 | ✅ 等宽字体 + 缩进（HTML 模式带语法高亮） |
+| ` ```mermaid ``` ` 流程图 | ✅ `--mermaid` 渲染为图片嵌入 |
+| `#` `##` `###` 标题 | ✅ `--toc` 自动生成目录 |
+
+## 效果
+
+```bash
+$ ./convert.sh -c --from deepseek
 [INFO]  Pandoc: /usr/local/bin/pandoc
-[INFO]  输入: document.md (1200 行)
-[INFO]  统计: 8 图片, 52 表格行, 15 块公式, 6 代码块, 3 Mermaid
+[INFO]  剪贴板模式: 正在读取剪贴板...
+[INFO]  模型检测: deepseek
+[OK]    内容已清洗 (deepseek) → /tmp/统计机器学习_完全统一知识体系.md
+[INFO]  输入: /tmp/统计机器学习_完全统一知识体系.md (2327 行)
+[INFO]  统计: 0图 18表行 129公式 3代码块 0Mermaid
 [INFO]  模式: DOCX（公式OMML + 图片嵌入 + 表格保留）
 [INFO]  转换中...
-[OK]    已生成: document.docx (156K)
+[OK]    已生成: ~/Desktop/md2word_exports/统计机器学习_完全统一知识体系.docx (76K)
 
-  ┌─ 内容完整性检查 ─────────────────────────────┐
-  │  ✅ 图片:   8 张已嵌入 docx                    │
-  │  ✅ 表格:   已保留边框和对齐                     │
-  │  ✅ 公式:   15 个 → OMML 可编辑                 │
-  │  ⚠️  代码:   6 个 → 等宽字体，无语法高亮         │
-  │  ❌ Mermaid: 3 个已丢失 (未加 --mermaid)        │
-  └───────────────────────────────────────────────┘
+  ┌─ 内容完整性检查 ─────────────────────────────────────┐
+  │  ✅ 表格:    18 行，边框对齐完整                       │
+  │  ✅ 公式:    129 个 → OMML 可编辑                      │
+  │  ⚠️  代码:    3 个 → 等宽字体，语法高亮建议 --html      │
+  └──────────────────────────────────────────────────────┘
+[INFO]  正在打开文件...
 ```
 
-## 图片处理 FAQ
+## 常见问题
 
-### 图片找不到怎么办？
+**Q: 公式在 Word 里能编辑吗？**
+A: 能。双击公式进入 Word 公式编辑器，不是截图。
 
-```bash
-# 检查图片路径，确保 --resource-path 正确
-# 脚本默认将 .md 文件所在目录设为搜索根目录
+**Q: 代码块有颜色吗？**
+A: 直接 docx 没有（Pandoc 限制）。加 `--html` 生成 HTML，浏览器打开→全选→粘贴到 Word 就有颜色了。
 
-# 如果图片在上级目录：
-./convert.sh document.md --ref template.docx
-# 手动调整 resource-path（编辑脚本最后一行）
-```
+**Q: 剪贴板模式支持哪些 OS？**
+A: Windows（PowerShell Get-Clipboard）/ macOS（pbpaste）/ Linux（xclip 或 wl-paste）。
 
-### 网络图片下载失败？
-
-1. 先把图片手动下载到本地
-2. 把 Markdown 里的 `![](https://...)` 改成 `![](img/xxx.png)`
-3. 重新转换
-
-### 能压缩图片吗？
-
-docx 内嵌的是原始分辨率图片。转换后在 Word 里：`文件 → 压缩图片 → 选择分辨率`。
-
-## 表格处理 FAQ
-
-### 支持合并单元格吗？
-
-用 Pandoc 的**网格表（grid table）**语法：
-
-```markdown
-+----------+----------+----------+
-| 列1      | 列2      | 列3      |
-+==========+==========+==========+
-| 跨两列             || 列3      |
-+----------+----------+----------+
-```
-
-### 表格有斑马纹/主题色吗？
-
-默认无——Pandoc 生成的表格是朴素的黑边框。需要自定义样式：
-
-1. 在 Word 里做好模板表格（带斑马纹/主题色）
-2. 保存为 `template.docx`
-3. 转换时用 `--ref template.docx`
-
-## 代码高亮对比
-
-| 方案 | 公式 | 图片 | 表格 | 代码高亮 | 操作量 |
-|------|------|------|------|----------|--------|
-| **直接转 docx** | ✅ OMML | ✅ 嵌入 | ✅ 保留 | ❌ 无 | 一条命令 |
-| **HTML 中转** | ✅ MathML | ✅ 嵌入 | ✅ 保留 | ✅ tango | 命令+粘贴 |
-| 手动复制粘贴 | ❌ 乱码 | ❌ 丢失 | ❌ 丢失 | ❌ 丢失 | 噩梦 |
-
-## 已知限制
-
-| 限制 | 说明 | 补救 |
-|------|------|------|
-| 代码块无语法高亮（docx） | Pandoc docx writer 限制 | `--html` 模式 |
-| HTML 折叠块 `<details>` | docx 中变纯文本 | 手动处理 |
-| Mermaid | 需额外安装 mermaid-filter | `npm install -g mermaid-filter` |
-| ASCII 图表 | 可能换行错位 | Word 内微调 |
-| 网络图片 | 需要网络连接 | 预先下载到本地 |
+**Q: 能批量转换吗？**
+A: 能。`for f in *.md; do ./convert.sh "$f"; done`
 
 ## 文件结构
 
 ```
 md2word/
 ├── README.md     # 说明文档
-└── convert.sh    # 核心转换脚本
+└── convert.sh    # 核心脚本 (~280行)
 ```
 
-> Pandoc 二进制文件不包含在仓库中（~200MB）。脚本会按以下顺序查找：系统 PATH → 常见安装位置 → 技能目录 → 提示安装。
+> Pandoc 不在仓库中（~200MB）。脚本自动查找系统已安装的 pandoc。
 
 ## 许可证
 
-MIT License — 随意使用、修改、分发。
+MIT License
 
 ---
 
-**相关资源**
-- [Pandoc 官方文档](https://pandoc.org/MANUAL.html)
-- [Pandoc Markdown 语法](https://pandoc.org/MANUAL.html#pandocs-markdown)
-- [Python 从入门到 AI 全栈开发指导大全](https://github.com/Zzin-cell/python-ai-guide) — 配套教程
+**相关仓库**
+- [python-ai-guide](https://github.com/Zzin-cell/python-ai-guide) — Python 从入门到 AI 全栈教程
