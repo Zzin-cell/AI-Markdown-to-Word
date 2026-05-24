@@ -5,7 +5,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/Zzin-cell/AI-Markdown-to-Word)](https://github.com/Zzin-cell/AI-Markdown-to-Word/stargazers)
 [![GitHub license](https://img.shields.io/github/license/Zzin-cell/AI-Markdown-to-Word)](https://github.com/Zzin-cell/AI-Markdown-to-Word/blob/master/LICENSE)
 
-**关键词**：Markdown 转 Word | AI 剪贴板 | LaTeX 公式 | DeepSeek ChatGPT Claude | Pandoc 一键转换
+**关键词**：Markdown 转 Word | AI 剪贴板 | LaTeX 公式 | DeepSeek ChatGPT Claude | Claude Code Hook | Pandoc 一键转换
 
 ## 为什么需要这个工具？
 
@@ -136,13 +136,15 @@ md2word/
 
 > Pandoc 不在仓库中（~200MB）。脚本自动查找系统已安装的 pandoc。
 
-## Claude Code 自动转换（可选）
+## Claude Code 全自动转换（可选）
 
-如果你在用 [Claude Code](https://claude.ai/code)，可以配置 Stop Hook，让 Claude 每次回复**自动存为 Word**，省去手动复制和运行命令。
+用 [Claude Code](https://claude.ai/code) 的话，可以更进一步——**连复制和敲命令都省了**。
 
-### 配置
+配置 Stop Hook 后，每次 Claude 回复完，Word 文档自动出现在桌面。你只管对话，存文档的事全自动。
 
-在 `~/.claude/settings.json` 中添加：
+### 配置方法
+
+把 `hook-stop.sh` 放到你的 Claude Code skill 目录（或任意路径），在 `~/.claude/settings.json` 中加入：
 
 ```json
 {
@@ -153,7 +155,7 @@ md2word/
         "hooks": [
           {
             "type": "command",
-            "command": "bash /path/to/hook-stop.sh",
+            "command": "bash ~/.claude/skills/AI-Markdown-to-Word/hook-stop.sh",
             "async": true
           }
         ]
@@ -163,21 +165,30 @@ md2word/
 }
 ```
 
-### 工作原理
+### 运行流程
 
 ```
-你的提问 → Claude 回复 → Stop hook 触发
-                              ↓
-                     读取对话 transcript
-                              ↓
-                     提取最后一条回复
-                              ↓
-                   Pandoc 转 .docx（OMML 公式 + 表格）
-                              ↓
-                  保存到 ~/Desktop/AI_Word_Exports/
+你问 → Claude 答 → 回答结束 → Stop hook 自动触发
+                                    ↓
+                          从 transcript 提取回复
+                                    ↓
+                          Pandoc 转 .docx
+                          （公式 OMML + 表格保留 + 代码等宽）
+                                    ↓
+                          桌面 AI_Word_Exports/
+                          自动生成 .docx 文件
 ```
 
-> 需要系统安装 Python 3。Pandoc 自动从同目录查找（`pandoc.exe` 或系统 PATH）。
+### 与剪贴板模式对比
+
+| | 剪贴板 `-c` | Stop Hook |
+|---|---|---|
+| 操作 | 对话完 → Ctrl+C → 终端敲命令 | **零操作，全自动** |
+| 触发 | 手动 | Claude 每次回复结束 |
+| 适用 | 任何 AI 网页版 / 客户端 | Claude Code 用户专属 |
+| 输出 | `桌面/md2word_exports/` | `桌面/AI_Word_Exports/` |
+
+> 前置：系统需安装 Python 3。Pandoc 自动查找同目录 `pandoc.exe` 或系统 PATH，无需额外配置。
 
 ## 许可证
 
