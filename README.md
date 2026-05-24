@@ -1,6 +1,11 @@
-# md2word
+# AI-Markdown-to-Word
 
-> 不同 AI 模型生成的 Markdown → 一键复制转 Word · 公式可编辑 · 图片嵌入 · 表格不丢
+> 🔥 AI 生成的 Markdown → 一键转 Word · 剪贴板直达 · 公式可编辑 · 图片自动嵌入 · 表格完整保留
+
+[![GitHub stars](https://img.shields.io/github/stars/Zzin-cell/AI-Markdown-to-Word)](https://github.com/Zzin-cell/AI-Markdown-to-Word/stargazers)
+[![GitHub license](https://img.shields.io/github/license/Zzin-cell/AI-Markdown-to-Word)](https://github.com/Zzin-cell/AI-Markdown-to-Word/blob/master/LICENSE)
+
+**关键词**：Markdown 转 Word | AI 剪贴板 | LaTeX 公式 | DeepSeek ChatGPT Claude | Pandoc 一键转换
 
 ## 为什么需要这个工具？
 
@@ -28,7 +33,7 @@ sudo apt install pandoc                 # Linux
 npm install -g @mermaid-js/mermaid-cli mermaid-filter
 
 # 3. 克隆
-git clone https://github.com/Zzin-cell/md2word.git
+git clone https://github.com/Zzin-cell/AI-Markdown-to-Word.git
 cd md2word
 chmod +x convert.sh
 ```

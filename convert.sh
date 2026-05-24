@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================
 # md2word — Markdown → Word 一键转换  v3.0
-# Repository: https://github.com/Zzin-cell/md2word
+# Repository: https://github.com/Zzin-cell/AI-Markdown-to-Word
 #
 # 用法:
 #   ./convert.sh input.md                  → 生成同目录 input.docx
@@ -275,7 +275,7 @@ md2word v3.0 — Markdown → Word 一键转换
   ✅ 目录       (--toc 自动生成)
 
 前置条件: pandoc (winget install JohnMacFarlane.Pandoc)
-GitHub: https://github.com/Zzin-cell/md2word
+GitHub: https://github.com/Zzin-cell/AI-Markdown-to-Word
 EOF
     exit 0
 }
