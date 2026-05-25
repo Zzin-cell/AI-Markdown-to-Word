@@ -31,25 +31,47 @@ sudo apt install pandoc                 # Linux
 
 # 2. 可选：Mermaid 流程图
 npm install -g @mermaid-js/mermaid-cli mermaid-filter
-
-# 3. 克隆
-git clone https://github.com/Zzin-cell/AI-Markdown-to-Word.git
-cd md2word
-chmod +x convert.sh
 ```
 
-### Bash 还是 Python？
+### 快速安装（Python 应用）
 
-两个版本功能完全一致，任选其一：
+```bash
+# 一键安装为系统命令
+pip install git+https://github.com/Zzin-cell/AI-Markdown-to-Word.git
 
-| | `convert.sh` | `convert.py` |
-|---|---|---|
-| 运行环境 | Bash (Git Bash / WSL / Linux / macOS) | Python 3.6+ (Windows/macOS/Linux) |
-| 依赖 | sed, grep, tr | 仅 Python 标准库 |
-| Windows 友好 | 需 Git Bash 或 WSL | ✅ 原生 cmd/PowerShell |
-| 使用方式 | `./convert.sh -p` | `python convert.py -p` |
+# 安装后直接使用
+md2word -p          # 粘贴就绪模式
+md2word -c          # 剪贴板 → .docx
+md2word doc.md      # 文件转换
+```
 
-> Python 版零外部依赖，Windows 用户无需安装 Git Bash。
+> 零外部依赖，仅需 Python 3.8+。Windows/macOS/Linux 全平台通杀。
+
+### 仓库克隆（Bash + Python 双版本）
+
+```bash
+git clone https://github.com/Zzin-cell/AI-Markdown-to-Word.git
+cd md2word
+
+# Bash 版
+chmod +x convert.sh
+./convert.sh -p
+
+# Python 包版
+pip install -e .
+md2word -p
+
+# Python 单文件版（无需安装）
+python convert.py -p
+```
+
+| | `convert.sh` | `convert.py` | `md2word` (pip 包) |
+|---|---|---|---|
+| 运行环境 | Bash | Python 3.8+ | Python 3.8+ |
+| 安装方式 | chmod +x | 无需安装 | `pip install` |
+| 使用命令 | `./convert.sh -p` | `python convert.py -p` | `md2word -p` |
+| 外部依赖 | sed, grep | 零依赖 | 零依赖 |
+| Windows 原生 | 需 Git Bash | ✅ cmd/PowerShell | ✅ cmd/PowerShell |
 
 ### 粘贴就绪模式 v4.0 🆕（直接 Ctrl+V 到 Word）
 
@@ -195,10 +217,19 @@ A: 能。`for f in *.md; do ./convert.sh "$f"; done`
 
 ```
 md2word/
-├── README.md      # 说明文档
-├── convert.sh     # Bash 版核心脚本 (v4.0, ~500行)
-├── convert.py     # Python 版核心脚本 (v4.0, ~400行, 零依赖)
-└── hook-stop.sh   # Claude Code 自动转换钩子 (可选)
+├── README.md         # 说明文档
+├── pyproject.toml    # Python 包配置 (pip install)
+├── convert.sh        # Bash 版核心脚本 (v4.0)
+├── convert.py        # Python 单文件版 (零依赖)
+├── hook-stop.sh      # Claude Code 自动转换钩子 (可选)
+└── md2word/          # Python 包 (可安装)
+    ├── __init__.py   # 包入口, 版本号
+    ├── __main__.py   # python -m md2word
+    ├── cli.py        # CLI 参数 + 主流程
+    ├── clipboard.py  # 跨平台剪贴板读写
+    ├── cleaners.py   # AI 模型清洗器
+    ├── converter.py  # Pandoc 转换引擎
+    └── utils.py      # 工具函数
 ```
 ```
 

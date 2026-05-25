@@ -1,14 +1,6 @@
-# Pandoc binary (too large for GitHub, users install separately)
-pandoc.exe
-pandoc
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Editor
-*.swp
-*.swo
-*~
-.vscode/
-.idea/
+__pycache__/
+*.pyc
+*.egg-info/
+*.egg
+dist/
+build/

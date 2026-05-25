@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "md2word"
+version = "4.0.0"
+description = "AI Markdown → Word 一键转换 — 剪贴板直达 / 粘贴就绪 / 公式图片表格完整保留"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+keywords = ["markdown", "word", "pandoc", "ai", "clipboard", "latex"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Text Processing :: Markup",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/Zzin-cell/AI-Markdown-to-Word"
+Repository = "https://github.com/Zzin-cell/AI-Markdown-to-Word"
+
+[project.scripts]
+md2word = "md2word.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["md2word*"]
