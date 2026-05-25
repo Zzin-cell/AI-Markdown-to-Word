@@ -38,6 +38,19 @@ cd md2word
 chmod +x convert.sh
 ```
 
+### Bash 还是 Python？
+
+两个版本功能完全一致，任选其一：
+
+| | `convert.sh` | `convert.py` |
+|---|---|---|
+| 运行环境 | Bash (Git Bash / WSL / Linux / macOS) | Python 3.6+ (Windows/macOS/Linux) |
+| 依赖 | sed, grep, tr | 仅 Python 标准库 |
+| Windows 友好 | 需 Git Bash 或 WSL | ✅ 原生 cmd/PowerShell |
+| 使用方式 | `./convert.sh -p` | `python convert.py -p` |
+
+> Python 版零外部依赖，Windows 用户无需安装 Git Bash。
+
 ### 粘贴就绪模式 v4.0 🆕（直接 Ctrl+V 到 Word）
 
 ```bash
@@ -55,6 +68,10 @@ chmod +x convert.sh
 # 指定模型
 ./convert.sh -p --from claude
 ./convert.sh -p --toc
+
+# Python 版（Windows 原生可用）
+python convert.py -p
+python convert.py -p --from deepseek --toc
 ```
 
 > Word 原生识别 HTML 格式剪贴板内容。公式以 MathML 嵌入，**双击可进公式编辑器编辑**，不是截图。
@@ -179,8 +196,10 @@ A: 能。`for f in *.md; do ./convert.sh "$f"; done`
 ```
 md2word/
 ├── README.md      # 说明文档
-├── convert.sh     # 核心脚本 (~280行)
+├── convert.sh     # Bash 版核心脚本 (v4.0, ~500行)
+├── convert.py     # Python 版核心脚本 (v4.0, ~400行, 零依赖)
 └── hook-stop.sh   # Claude Code 自动转换钩子 (可选)
+```
 ```
 
 > Pandoc 不在仓库中（~200MB）。脚本自动查找系统已安装的 pandoc。
