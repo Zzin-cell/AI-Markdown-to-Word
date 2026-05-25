@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 # =============================================================
-# md2word — Markdown → Word 一键转换  v3.0
+# md2word — Markdown → Word 一键转换  v4.0
 # Repository: https://github.com/Zzin-cell/AI-Markdown-to-Word
 #
 # 用法:
 #   ./convert.sh input.md                  → 生成同目录 input.docx
 #   ./convert.sh input.md output.docx       → 指定输出路径
 #   ./convert.sh -c                         → 从剪贴板直接转 Word
+#   ./convert.sh -p                         → 剪贴板粘贴就绪（Markdown→HTML→剪贴板，直接在Word Ctrl+V）
 #   ./convert.sh -c --from deepseek         → 剪贴板 + DeepSeek 清洗
 #   ./convert.sh input.md --html            → 生成带代码高亮的 HTML
 #   ./convert.sh input.md --toc             → 生成含目录的 docx
 #   ./convert.sh input.md --mermaid         → 渲染 Mermaid 流程图
 #
-# 剪贴板模式 (-c):
-#   复制 AI 对话中的 Markdown → 运行 ./convert.sh -c → 自动生成 Word
+# 粘贴就绪模式 (-p):
+#   复制 AI 回答 → 运行 ./convert.sh -p → 切到 Word Ctrl+V → 公式表格图片完美呈现
+#   原理: Markdown→HTML(含MathML/base64图片)→系统剪贴板→Word直接识别
 #   支持: DeepSeek / ChatGPT / Claude / Kimi / 通用
 # =============================================================
 set -euo pipefail
@@ -42,6 +44,27 @@ read_clipboard() {
     else
         # Windows: PowerShell
         powershell.exe -Command "Get-Clipboard" 2>/dev/null
+    fi
+}
+
+# 剪贴板写入（跨平台）
+# 用法: write_clipboard <html_file>
+write_clipboard() {
+    local html_file="$1"
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        cat "$html_file" | pbcopy
+    elif [[ "$(uname -s)" == "Linux" ]]; then
+        if command -v wl-copy &>/dev/null; then
+            wl-copy < "$html_file"
+        elif command -v xclip &>/dev/null; then
+            xclip -selection clipboard < "$html_file"
+        else
+            err "Linux 需安装 xclip 或 wl-clipboard"
+            exit 1
+        fi
+    else
+        # Windows: PowerShell 读取 HTML 文件写入剪贴板
+        powershell.exe -Command "Set-Clipboard -AsHtml -Value ([System.IO.File]::ReadAllText('$html_file', [System.Text.Encoding]::UTF8))"
     fi
 }
 
@@ -238,11 +261,12 @@ print_report() {
 # ============================================================
 usage() {
     cat <<'EOF'
-md2word v3.0 — Markdown → Word 一键转换
+md2word v4.0 — Markdown → Word 一键转换
 
 用法:
   ./convert.sh <input.md> [选项]
-  ./convert.sh -c [选项]             剪贴板模式
+  ./convert.sh -c [选项]             剪贴板 → Word
+  ./convert.sh -p [选项]             剪贴板 → 粘贴就绪（HTML→剪贴板，Word 直接 Ctrl+V）
 
 文件模式:
   ./convert.sh document.md                  → document.docx
@@ -252,12 +276,20 @@ md2word v3.0 — Markdown → Word 一键转换
   ./convert.sh document.md --ref tpl.docx   → 套用 Word 模板
 
 剪贴板模式 (复制 AI 回答后一键出 Word):
-  ./convert.sh -c                           → 自动检测模型清洗
+  ./convert.sh -c                           → 自动检测模型清洗 → docx
   ./convert.sh -c --from deepseek           → 指定 DeepSeek 清洗
   ./convert.sh -c --from chatgpt            → 指定 ChatGPT 清洗
   ./convert.sh -c --from claude             → 指定 Claude 清洗
   ./convert.sh -c --from kimi               → 指定 Kimi 清洗
   ./convert.sh -c --toc --html              → 组合选项
+
+粘贴就绪模式 v4.0 🆕 (复制 AI 回答 → 一键让剪贴板变成 Word 可粘贴格式):
+  ./convert.sh -p                           → 自动检测模型清洗 → HTML → 剪贴板
+  ./convert.sh -p --from deepseek           → 指定模型
+  ./convert.sh -p --toc                     → 含目录
+
+  原理: Markdown → HTML(含MathML公式 + base64图片) → 系统剪贴板
+        打开 Word → Ctrl+V → 公式可编辑、表格有边框、图片已嵌入
 
 模型清洗说明:
   deepseek  移除 🤖 标题 + "已深度思考" 折叠块
@@ -267,10 +299,10 @@ md2word v3.0 — Markdown → Word 一键转换
   默认      auto — 自动从内容特征检测
 
 支持的内容:
-  ✅ 数学公式   $...$ / $$...$$ → Word OMML 可编辑
-  ✅ 图片       本地路径自动嵌入，网络 URL 自动下载
+  ✅ 数学公式   $...$ / $$...$$ → Word OMML / MathML 可编辑
+  ✅ 图片       本地路径自动嵌入，网络 URL 自动下载 → base64 内嵌
   ✅ 表格       边框 + 对齐 + 合并单元格全部保留
-  ✅ 代码块     等宽字体 + 缩进 (--html 带语法高亮)
+  ✅ 代码块     等宽字体 + 语法高亮（HTML 模式）
   ✅ Mermaid    (需 --mermaid + npm install mermaid-filter)
   ✅ 目录       (--toc 自动生成)
 
@@ -290,9 +322,14 @@ if [[ -z "$INPUT" || "$INPUT" == "-h" || "$INPUT" == "--help" ]]; then
 fi
 
 # 剪贴板模式
-USE_CLIPBOARD=false
+USE_CLIPBOARD=false; USE_PASTE=false
 if [[ "$INPUT" == "-c" || "$INPUT" == "--clipboard" ]]; then
     USE_CLIPBOARD=true
+    shift
+elif [[ "$INPUT" == "-p" || "$INPUT" == "--paste" ]]; then
+    USE_CLIPBOARD=true
+    USE_PASTE=true
+    USE_HTML=true
     shift
 else
     shift
@@ -304,6 +341,7 @@ OUTPUT_FILE=""; REF_DOC=""; AI_MODEL="auto"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --html)      USE_HTML=true ;;
+        --paste|-p)  USE_PASTE=true; USE_HTML=true ;;
         --toc)       USE_TOC=true ;;
         --mermaid)   USE_MERMAID=true ;;
         --ref)       shift; REF_DOC="$1" ;;
@@ -336,7 +374,11 @@ fi
 # 剪贴板模式
 # ============================================================
 if $USE_CLIPBOARD; then
-    info "剪贴板模式: 正在读取剪贴板..."
+    if $USE_PASTE; then
+        info "粘贴就绪模式: 正在读取剪贴板..."
+    else
+        info "剪贴板模式: 正在读取剪贴板..."
+    fi
     RAW_CONTENT=$(read_clipboard)
 
     if [[ -z "$RAW_CONTENT" ]]; then
@@ -360,13 +402,18 @@ if $USE_CLIPBOARD; then
     ok "内容已清洗 (${AI_MODEL}) → $TEMP_MD"
 
     INPUT="$TEMP_MD"
-    DESKTOP=$(get_desktop)
-    mkdir -p "$DESKTOP/md2word_exports" 2>/dev/null
-    if [[ -z "$OUTPUT_FILE" ]]; then
-        if $USE_HTML; then
-            OUTPUT_FILE="$DESKTOP/md2word_exports/${TITLE}.html"
-        else
-            OUTPUT_FILE="$DESKTOP/md2word_exports/${TITLE}.docx"
+    if $USE_PASTE; then
+        # 粘贴就绪模式：HTML→剪贴板，不需要输出文件路径
+        true
+    else
+        DESKTOP=$(get_desktop)
+        mkdir -p "$DESKTOP/md2word_exports" 2>/dev/null
+        if [[ -z "$OUTPUT_FILE" ]]; then
+            if $USE_HTML; then
+                OUTPUT_FILE="$DESKTOP/md2word_exports/${TITLE}.html"
+            else
+                OUTPUT_FILE="$DESKTOP/md2word_exports/${TITLE}.docx"
+            fi
         fi
     fi
 fi
@@ -374,19 +421,26 @@ fi
 # ============================================================
 # 文件模式验证
 # ============================================================
-if ! $USE_CLIPBOARD && [[ ! -f "$INPUT" ]]; then
+if $USE_PASTE; then
+    # 粘贴就绪模式：生成临时 HTML 写入剪贴板
+    BASENAME="$(basename "$INPUT" .md)"
+    DIRNAME="$(dirname "$INPUT")"
+    TEMP_HTML="${TEMP_DIR:-/tmp}/${BASENAME}_clipboard.html"
+    OUTPUT_FILE="$TEMP_HTML"
+elif ! $USE_CLIPBOARD && [[ ! -f "$INPUT" ]]; then
     err "文件不存在: $INPUT"
     exit 1
 fi
 
-BASENAME="$(basename "$INPUT" .md)"
-DIRNAME="$(dirname "$INPUT")"
-
-if [[ -z "$OUTPUT_FILE" ]]; then
-    if $USE_HTML; then
-        OUTPUT_FILE="${DIRNAME}/${BASENAME}.html"
-    else
-        OUTPUT_FILE="${DIRNAME}/${BASENAME}.docx"
+if ! $USE_PASTE; then
+    BASENAME="$(basename "$INPUT" .md)"
+    DIRNAME="$(dirname "$INPUT")"
+    if [[ -z "$OUTPUT_FILE" ]]; then
+        if $USE_HTML; then
+            OUTPUT_FILE="${DIRNAME}/${BASENAME}.html"
+        else
+            OUTPUT_FILE="${DIRNAME}/${BASENAME}.docx"
+        fi
     fi
 fi
 
@@ -419,7 +473,18 @@ $USE_MERMAID && [[ "$MERMAID_COUNT" -gt 0 ]] && PANDOC_ARGS+=(-F mermaid-filter)
 # ============================================================
 # 转换
 # ============================================================
-if $USE_HTML; then
+if $USE_PASTE; then
+    info "模式: 粘贴就绪（Markdown→HTML→剪贴板，Word 直接 Ctrl+V）"
+    PANDOC_ARGS+=(--highlight-style=tango --standalone --metadata title="$BASENAME" --self-contained)
+    info "转换中..."
+    "$PANDOC" "$INPUT" -o "$OUTPUT_FILE" "${PANDOC_ARGS[@]}"
+    info "写入剪贴板..."
+    write_clipboard "$OUTPUT_FILE"
+    ok "剪贴板已就绪！打开 Word → Ctrl+V 即可粘贴"
+    print_report
+    rm -f "$OUTPUT_FILE" "$TEMP_MD"
+    exit 0
+elif $USE_HTML; then
     info "模式: HTML（代码语法高亮 + 图片内嵌）"
     PANDOC_ARGS+=(--highlight-style=tango --standalone --metadata title="$BASENAME" --self-contained)
     info "转换中..."

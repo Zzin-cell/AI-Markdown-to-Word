@@ -1,11 +1,11 @@
 # AI-Markdown-to-Word
 
-> 🔥 AI 生成的 Markdown → 一键转 Word · 剪贴板直达 · 公式可编辑 · 图片自动嵌入 · 表格完整保留
+> 🔥 AI 生成的 Markdown → 一键转 Word · 粘贴就绪 · 剪贴板直达 · 公式可编辑 · 图片自动嵌入 · 表格完整保留
 
 [![GitHub stars](https://img.shields.io/github/stars/Zzin-cell/AI-Markdown-to-Word)](https://github.com/Zzin-cell/AI-Markdown-to-Word/stargazers)
 [![GitHub license](https://img.shields.io/github/license/Zzin-cell/AI-Markdown-to-Word)](https://github.com/Zzin-cell/AI-Markdown-to-Word/blob/master/LICENSE)
 
-**关键词**：Markdown 转 Word | AI 剪贴板 | LaTeX 公式 | DeepSeek ChatGPT Claude | Claude Code Hook | Pandoc 一键转换
+**关键词**：Markdown 转 Word | AI 剪贴板 | 粘贴即用 | LaTeX 公式 | DeepSeek ChatGPT Claude | Claude Code Hook | Pandoc 一键转换
 
 ## 为什么需要这个工具？
 
@@ -17,7 +17,7 @@
 - 代码块颜色全无
 - DeepSeek 的"已深度思考"折叠块变成占位文本
 
-**md2word 三步解决**：复制 → 终端敲一条命令 → Word 自动打开，干净整洁。
+**md2word 两步解决 v4.0**：复制 → 敲 `./convert.sh -p` → Word 里 Ctrl+V，公式表格图片全部到位。
 
 ## 快速开始
 
@@ -38,7 +38,28 @@ cd md2word
 chmod +x convert.sh
 ```
 
-### 剪贴板模式（从 AI 对话框复制后一键出 Word）
+### 粘贴就绪模式 v4.0 🆕（直接 Ctrl+V 到 Word）
+
+```bash
+# 在 AI 对话框 Ctrl+C 复制 → 终端执行：
+./convert.sh -p
+
+# 自动做的事：
+# 1. 读取剪贴板
+# 2. 检测是哪个模型的输出
+# 3. 清洗掉 "已深度思考" 等 AI 专属标记
+# 4. Markdown → HTML（MathML 公式 + base64 图片 + 表格边框 + 代码高亮）
+# 5. 写回系统剪贴板
+# 6. 打开 Word → Ctrl+V → 完美！
+
+# 指定模型
+./convert.sh -p --from claude
+./convert.sh -p --toc
+```
+
+> Word 原生识别 HTML 格式剪贴板内容。公式以 MathML 嵌入，**双击可进公式编辑器编辑**，不是截图。
+
+### 剪贴板模式（一键出 .docx）
 
 ```bash
 # 在 AI 对话框 Ctrl+C 复制 → 终端执行：
@@ -75,6 +96,10 @@ chmod +x convert.sh
 # 剪贴板 + 指定模型 + 多选项
 ./convert.sh -c --from deepseek --toc
 ./convert.sh -c --from claude --html
+
+# v4.0 粘贴就绪 + 指定模型
+./convert.sh -p --from deepseek
+./convert.sh -p --from claude --toc
 ```
 
 ## 支持的内容
@@ -85,7 +110,7 @@ chmod +x convert.sh
 | `![图片](img/photo.png)` 本地路径 | ✅ 自动查找并嵌入 docx |
 | `![图片](https://example.com/img.png)` 网络 URL | ✅ 自动下载嵌入 |
 | `| a | b |` 管道表 / `+--+--+` 网格表 | ✅ 边框 + 对齐 + 合并单元格 |
-| ` ```python ``` ` 代码块 | ✅ 等宽字体 + 缩进（HTML 模式带语法高亮） |
+| ` ```python ``` ` 代码块 | ✅ 等宽字体 + 缩进（`-p` / `--html` 带语法高亮） |
 | ` ```mermaid ``` ` 流程图 | ✅ `--mermaid` 渲染为图片嵌入 |
 | `#` `##` `###` 标题 | ✅ `--toc` 自动生成目录 |
 
@@ -111,15 +136,39 @@ $ ./convert.sh -c --from deepseek
 [INFO]  正在打开文件...
 ```
 
+粘贴就绪模式 v4.0：
+
+```bash
+$ ./convert.sh -p --from claude
+[INFO]  Pandoc: /usr/local/bin/pandoc
+[INFO]  粘贴就绪模式: 正在读取剪贴板...
+[INFO]  模型检测: claude
+[OK]    内容已清洗 (claude) → /tmp/SQL数据库完全指南.md
+[INFO]  输入: /tmp/SQL数据库完全指南.md (1184 行)
+[INFO]  统计: 0图 18表行 0公式 19代码块 0Mermaid
+[INFO]  模式: 粘贴就绪（Markdown→HTML→剪贴板，Word 直接 Ctrl+V）
+[INFO]  转换中...
+[INFO]  写入剪贴板...
+[OK]    剪贴板已就绪！打开 Word → Ctrl+V 即可粘贴
+
+  ┌─ 内容完整性检查 ─────────────────────────────────────┐
+  │  ✅ 表格:    18 行，边框对齐完整                      │
+  │  ✅ 代码:    19 个 → 语法高亮                         │
+  └──────────────────────────────────────────────────────┘
+```
+
 ## 常见问题
 
 **Q: 公式在 Word 里能编辑吗？**
 A: 能。双击公式进入 Word 公式编辑器，不是截图。
 
 **Q: 代码块有颜色吗？**
-A: 直接 docx 没有（Pandoc 限制）。加 `--html` 生成 HTML，浏览器打开→全选→粘贴到 Word 就有颜色了。
+A: 用 `-p` 粘贴就绪模式，粘贴到 Word 自带语法高亮。docx 直接输出没有（Pandoc 限制）。
 
-**Q: 剪贴板模式支持哪些 OS？**
+**Q: `-p` 和 `-c` 有什么区别？**
+A: `-p` 把 HTML 写回剪贴板，你 Ctrl+V 粘贴到 Word；`-c` 生成 .docx 文件并自动打开。日常用 `-p` 更快。
+
+**Q: 支持哪些 OS？**
 A: Windows（PowerShell Get-Clipboard）/ macOS（pbpaste）/ Linux（xclip 或 wl-paste）。
 
 **Q: 能批量转换吗？**
