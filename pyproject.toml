@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "md2word"
-version = "4.0.0"
-description = "AI Markdown → Word 一键转换 — 剪贴板直达 / 粘贴就绪 / 公式图片表格完整保留"
+version = "5.0.0"
+description = "AI Markdown 全格式转换器 — 交互式向导 / 粘贴就绪 / Word/PPT/PDF/ePub/HTML"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.8"

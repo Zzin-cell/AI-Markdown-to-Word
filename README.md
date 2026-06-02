@@ -1,124 +1,96 @@
 # AI-Markdown-to-Word
 
-> 🔥 AI 生成的 Markdown → 一键转 Word · 粘贴就绪 · 剪贴板直达 · 公式可编辑 · 图片自动嵌入 · 表格完整保留
+> 🔥 AI 生成的 Markdown → Word/PPT/PDF/HTML/ePub 全格式 · 交互式向导零门槛 · 粘贴即用
 
 [![GitHub stars](https://img.shields.io/github/stars/Zzin-cell/AI-Markdown-to-Word)](https://github.com/Zzin-cell/AI-Markdown-to-Word/stargazers)
 [![GitHub license](https://img.shields.io/github/license/Zzin-cell/AI-Markdown-to-Word)](https://github.com/Zzin-cell/AI-Markdown-to-Word/blob/master/LICENSE)
 
-**关键词**：Markdown 转 Word | AI 剪贴板 | 粘贴即用 | LaTeX 公式 | DeepSeek ChatGPT Claude | Claude Code Hook | Pandoc 一键转换
+**关键词**：Markdown 全格式转换 | AI 剪贴板 | Word PPT PDF HTML ePub | 交互式向导 | AI小白友好 | Pandoc
 
 ## 为什么需要这个工具？
 
-你在 DeepSeek、ChatGPT、Claude 里精心调教出的答案，满屏 LaTeX 公式、Python 代码、Mermaid 流程图——想存成 Word 文档时傻眼了：
+你在 DeepSeek、ChatGPT、Claude 里精心调教出的答案——想保存成文档时傻眼了：
 
 - 粘贴到 Word → 公式变成 `$$...$$` 乱码
-- 图片只剩裂开的链接
-- 表格对齐全丢
-- 代码块颜色全无
-- DeepSeek 的"已深度思考"折叠块变成占位文本
+- 想做成 PPT → 手动复制粘贴到手软
+- 图片只剩裂开的链接 · 表格对齐全丢 · 代码高亮全无
 
-**md2word 两步解决 v4.0**：复制 → 敲 `./convert.sh -p` → Word 里 Ctrl+V，公式表格图片全部到位。
+**v5 一句话**：安装 Pandoc → 终端输入 `md2word` → 跟着提示走 → 完成。
 
-## 快速开始
+## 快速开始（AI 小白友好）
 
-### 安装
+### 第一步：安装 Pandoc
 
 ```bash
-# 1. 必须：Pandoc
 winget install JohnMacFarlane.Pandoc   # Windows
 brew install pandoc                     # macOS
 sudo apt install pandoc                 # Linux
-
-# 2. 可选：Mermaid 流程图
-npm install -g @mermaid-js/mermaid-cli mermaid-filter
 ```
 
-### 快速安装（Python 应用）
+### 第二步：安装 md2word
 
 ```bash
-# 一键安装为系统命令
 pip install git+https://github.com/Zzin-cell/AI-Markdown-to-Word.git
-
-# 安装后直接使用
-md2word -p          # 粘贴就绪模式
-md2word -c          # 剪贴板 → .docx
-md2word doc.md      # 文件转换
 ```
 
-> 零外部依赖，仅需 Python 3.8+。Windows/macOS/Linux 全平台通杀。
-
-### 仓库克隆（Bash + Python 双版本）
+### 第三步：使用
 
 ```bash
-git clone https://github.com/Zzin-cell/AI-Markdown-to-Word.git
-cd md2word
-
-# Bash 版
-chmod +x convert.sh
-./convert.sh -p
-
-# Python 包版
-pip install -e .
-md2word -p
-
-# Python 单文件版（无需安装）
-python convert.py -p
+md2word              # 交互式向导（推荐！跟着提示走就行）
+md2word -p           # 粘贴就绪：复制 AI 回答 → 执行 → Word 里 Ctrl+V
+md2word -c           # 剪贴板 → .docx
+md2word doc.md       # 转 Word
+md2word doc.md -f pptx  # 转 PowerPoint
+md2word doc.md -f html --toc   # 转 HTML + 目录
 ```
 
-| | `convert.sh` | `convert.py` | `md2word` (pip 包) |
-|---|---|---|---|
-| 运行环境 | Bash | Python 3.8+ | Python 3.8+ |
-| 安装方式 | chmod +x | 无需安装 | `pip install` |
-| 使用命令 | `./convert.sh -p` | `python convert.py -p` | `md2word -p` |
-| 外部依赖 | sed, grep | 零依赖 | 零依赖 |
-| Windows 原生 | 需 Git Bash | ✅ cmd/PowerShell | ✅ cmd/PowerShell |
+> 零外部依赖，仅需 Python 3.8+。Windows/macOS/Linux 全平台。
 
-### 粘贴就绪模式 v4.0 🆕（直接 Ctrl+V 到 Word）
+## 快速开始
+
+## v5.0 全格式转换
+
+| 格式 | 命令 | 输出 | 说明 |
+|------|------|------|------|
+| **Word** | `md2word doc.md` 或 `md2word -c` | `.docx` | 公式 OMML 可双击编辑 |
+| **PowerPoint** | `md2word doc.md -f pptx` | `.pptx` | 每个 `#` 标题一页幻灯片 |
+| **HTML** | `md2word doc.md -f html` | `.html` | 代码语法高亮，自包含 |
+| **PDF** | `md2word doc.md -f pdf` | `.pdf` | 需 wkhtmltopdf |
+| **ePub** | `md2word doc.md -f epub` | `.epub` | Kindle/Apple Books |
+| **粘贴就绪** | `md2word -p` | HTML→剪贴板 | Word Ctrl+V，公式表格图片完美 |
+| **纯文本** | `md2word doc.md -f txt` | `.txt` | 只要文字 |
+
+## 三大使用方式
+
+### 1. 交互式向导（零门槛 · 新手推荐）
 
 ```bash
-# 在 AI 对话框 Ctrl+C 复制 → 终端执行：
-./convert.sh -p
+md2word        # 直接回车，跟着提示一步步走
+md2word -w     # 同上
 
-# 自动做的事：
-# 1. 读取剪贴板
-# 2. 检测是哪个模型的输出
-# 3. 清洗掉 "已深度思考" 等 AI 专属标记
-# 4. Markdown → HTML（MathML 公式 + base64 图片 + 表格边框 + 代码高亮）
-# 5. 写回系统剪贴板
-# 6. 打开 Word → Ctrl+V → 完美！
-
-# 指定模型
-./convert.sh -p --from claude
-./convert.sh -p --toc
-
-# Python 版（Windows 原生可用）
-python convert.py -p
-python convert.py -p --from deepseek --toc
+# 向导会问你:
+#   → 从剪贴板还是文件？
+#   → 自动检测 AI 模型并清洗
+#   → 选输出格式（Word/PPT/HTML/PDF...）
+#   → 要不要目录？
+#   → 保存到哪？
+#   → 转换完自动打开
 ```
 
-> Word 原生识别 HTML 格式剪贴板内容。公式以 MathML 嵌入，**双击可进公式编辑器编辑**，不是截图。
-
-### 剪贴板模式（一键出 .docx）
+### 2. 剪贴板模式（快）
 
 ```bash
-# 在 AI 对话框 Ctrl+C 复制 → 终端执行：
-./convert.sh -c
-
-# 自动做的事：
-# 1. 读取剪贴板
-# 2. 检测是哪个模型的输出
-# 3. 清洗掉 "已深度思考" 等 AI 专属标记
-# 4. 公式→OMML 图片→嵌入 表格→保留
-# 5. 生成 docx 并自动打开
+md2word -p                    # 粘贴就绪：复制→敲命令→Word Ctrl+V
+md2word -c                    # 剪贴板→docx，自动打开
+md2word -p --from deepseek    # 指定 AI 模型清洗
 ```
 
-### 文件模式
+### 3. 文件模式（命令行）
 
 ```bash
-./convert.sh document.md              # 基础转换
-./convert.sh document.md --toc        # 含目录
-./convert.sh document.md --html       # 代码高亮版（HTML→粘贴到 Word）
-./convert.sh document.md --mermaid    # 渲染流程图
+md2word doc.md                # 默认转 docx
+md2word doc.md -f pptx        # 转 PowerPoint
+md2word doc.md -f html --toc  # 转 HTML + 目录
 ```
 
 ## 多模型支持
@@ -218,17 +190,17 @@ A: 能。`for f in *.md; do ./convert.sh "$f"; done`
 ```
 md2word/
 ├── README.md         # 说明文档
-├── pyproject.toml    # Python 包配置 (pip install)
-├── convert.sh        # Bash 版核心脚本 (v4.0)
-├── convert.py        # Python 单文件版 (零依赖)
+├── pyproject.toml    # Python 包配置 (pip install md2word)
+├── convert.sh        # Bash 版 (v4.0, 需 Git Bash / WSL)
+├── convert.py        # Python 单文件版 (零依赖, 无需 pip)
 ├── hook-stop.sh      # Claude Code 自动转换钩子 (可选)
-└── md2word/          # Python 包 (可安装)
+└── md2word/          # Python 包 v5.0
     ├── __init__.py   # 包入口, 版本号
     ├── __main__.py   # python -m md2word
-    ├── cli.py        # CLI 参数 + 主流程
-    ├── clipboard.py  # 跨平台剪贴板读写
+    ├── cli.py        # CLI + 交互式向导
+    ├── clipboard.py  # 跨平台剪贴板
     ├── cleaners.py   # AI 模型清洗器
-    ├── converter.py  # Pandoc 转换引擎
+    ├── converter.py  # 全格式转换引擎
     └── utils.py      # 工具函数
 ```
 ```
